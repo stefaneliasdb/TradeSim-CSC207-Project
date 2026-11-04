@@ -1,6 +1,5 @@
 package entity;
 import java.math.BigDecimal;
-import java.util.List;
 
 public class User {
     private static final BigDecimal DEFAULT = new BigDecimal(10000);
@@ -24,27 +23,27 @@ public class User {
         // log in feature will be added later but I gotta learn how to do it first
     }
 
-    private String getuserId() {
+    public String getuserId() {
         return userId;
     }
 
-    private String getUserName() {
+    public String getUserName() {
         return userName;
     }
 
-    private String getPassword() {
+    public String getPassword() {
         return password;
     }
 
-    private Portfolio getPortfolio() {
+    public Portfolio getPortfolio() {
         return portfolio;
     }
 
-    private BigDecimal getUserCash() {
+    public BigDecimal getUserCash() {
         return userCash;
     }
 
-    private boolean hasSufficientCash(BigDecimal amount) {
+    public boolean hasSufficientCash(BigDecimal amount) {
         return (this.userCash.compareTo(amount) >= 0);
     }
 
