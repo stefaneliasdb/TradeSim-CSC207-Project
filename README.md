@@ -27,13 +27,16 @@ TradeSim is a Java-based paper trading and portfolio analytics application devel
 |-------------|--------------|
 | Stefan | Use Case |
 | Harris | Use Case |
-| Nuerlan | Use Case |
+| Nuerlan | Place a buy or sell order |
 | Gil | Use Case |
 ---
 ## Entities
 ### Stock
 ### Portfolio
 ### Order
+Represents a completed buy or sell transaction. Stores the order ID,
+user ID, stock symbol, order type, quantity, execution price, and
+execution time. Validates its inputs and calculates the total trade value.
 ### User
 ---
 ## API Usage
