@@ -11,7 +11,7 @@
 TradeSim is a Java-based paper trading and portfolio analytics application developed using Clean Architecture and SOLID design principles. The platform aims to integrate real-time market data, simulated stock trading, portfolio management, and financial analytics, providing users with an interactive environment to explore financial markets and evaluate investment strategies.
 ---
 ## User Stories
-### As a trader, I want to be able to view stocks and their analytics live.
+### As a trader, I want to be able to view stocks and analytics live.
 ### User Story 2
 ### User Story 3
 (Add additional user stories as needed.)
