@@ -12,21 +12,22 @@ TradeSim is a Java-based paper trading and portfolio analytics application devel
 ---
 ## User Stories
 ### As a trader, I want to be able to view stocks and analytics live.
-### User Story 2
-### As a trader, I wnat to be able to buy and sell stocks.
+### As a trader, I want to be able to view the history of my networth on the trading app.
+### User Story 3
 (Add additional user stories as needed.)
 ---
 ## Use Cases
 ### View live stock analytics.
-### Use Case 2
-### Place a buy or sell order.
+### Display history of user's networth
+### Use Case 3
+Place a buy or sell order
 (Add additional use cases as needed.)
 ---
 ## Minimal Viable Product (MVP)
 | Team Member | MVP Use Case |
 |-------------|--------------|
 | Stefan | View live stock analytics |
-| Harris | Sign up and log in as a user + history of cash status|
+| Harris | Display history of user's networth|
 | Nuerlan | Place a buy or sell order |
 | Gil | Use Case |
 ---
