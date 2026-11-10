@@ -20,6 +20,7 @@ TradeSim is a Java-based paper trading and portfolio analytics application devel
 ### Use Case 1
 ### Use Case 2
 ### Use Case 3
+Place a buy or sell order
 (Add additional use cases as needed.)
 ---
 ## Minimal Viable Product (MVP)
