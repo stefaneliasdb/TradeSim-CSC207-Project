@@ -26,7 +26,7 @@ TradeSim is a Java-based paper trading and portfolio analytics application devel
 | Team Member | MVP Use Case |
 |-------------|--------------|
 | Stefan | Use Case |
-| Harris | Sign up and log in as a user |
+| Harris | Sign up and log in as a user + history of cash status|
 | Nuerlan | Place a buy or sell order |
 | Gil | Use Case |
 ---
