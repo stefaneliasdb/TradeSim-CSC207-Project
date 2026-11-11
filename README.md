@@ -39,6 +39,7 @@ Represents a completed buy or sell transaction. Stores the order ID,
 user ID, stock symbol, order type, quantity, execution price, and
 execution time. Validates its inputs and calculates the total trade value.
 ### User
+Represents a registered user. Stores userId, password, username, and amount of cash the user has. 
 ---
 ## API Usage
 **API Name:**
