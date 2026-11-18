@@ -14,16 +14,13 @@ TradeSim is a Java-based paper trading and portfolio analytics application devel
 ### As a trader, I want to be able to view stocks and analytics live.
 ### As a trader, I want to be able to view the history of my networth on the trading app.
 ### As a trader, I want to be able to buy and sell stocks.
-### As a trader, I want to view the amount of each stock I own. (Gil)
-### As a trader, I want to view the performance of my stock picks. (Gil)
-(Add additional user stories as needed.)
+### As a trader, I want to view the amount and performance of each stock I own.
 ---
 ## Use Cases
 ### View live stock analytics.
 ### Display history of user's networth.
 ### Place a buy or sell order.
-### View owned stocks and performance. (Gil)
-(Add additional use cases as needed.)
+### View owned stocks and performance.
 ---
 ## Minimal Viable Product (MVP)
 | Team Member | MVP Use Case |
@@ -31,7 +28,7 @@ TradeSim is a Java-based paper trading and portfolio analytics application devel
 | Stefan | View live stock analytics |
 | Harris | Display history of user's networth|
 | Nuerlan | Place a buy or sell order |
-| Gil | Use Case |
+| Gil | View owned stocks and performance |
 ---
 ## Entities
 ### Stock
@@ -44,9 +41,9 @@ execution time. Validates its inputs and calculates the total trade value.
 Represents a registered user. Stores userId, password, username, and amount of cash the user has. 
 ---
 ## API Usage
-**API Name:**
-**Documentation:** [Link]
-**How it is used in the program:**
+**API Name: Tickerbot**
+**Documentation: [https://tickerbot.io/]**
+**How it is used in the program: The API retrieves real-time stock market data, such as share prices, which the TradeSim program uses to display up-to-date financial information to users.**
 ---
 ## Design Diagrams
 ### UML Class Diagram
