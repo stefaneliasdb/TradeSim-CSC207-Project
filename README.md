@@ -9,6 +9,7 @@
 ## Project Description
 ### Domain
 TradeSim is a Java-based paper trading and portfolio analytics application developed using Clean Architecture and SOLID design principles. The platform aims to integrate real-time market data, simulated stock trading, portfolio management, and financial analytics, providing users with an interactive environment to explore financial markets and evaluate investment strategies.
+
 ---
 ## User Stories
 ### As a trader, I want to be able to view stocks and analytics live.
@@ -31,19 +32,26 @@ TradeSim is a Java-based paper trading and portfolio analytics application devel
 | Gil | View owned stocks and performance |
 ---
 ## Entities
+### User
+Represents a registered user. Stores userID, password, username, and amount of cash the user has.
 ### Stock
+Represents a stock in the application, storing information such as its ticker symbol, company name, and price.
 ### Portfolio
 ### Order
 Represents a completed buy or sell transaction. Stores the order ID,
 user ID, stock symbol, order type, quantity, execution price, and
 execution time. Validates its inputs and calculates the total trade value.
-### User
-Represents a registered user. Stores userId, password, username, and amount of cash the user has. 
+
 ---
 ## API Usage
-**API Name: Tickerbot**
-**Documentation: [https://tickerbot.io/]**
-**How it is used in the program: The API retrieves real-time stock market data, such as share prices, which the TradeSim program uses to display up-to-date financial information to users.**
+
+**API Name:** Tickerbot
+
+**Documentation:** [https://tickerbot.io/](https://tickerbot.io/)
+
+**How it is used in the program:**  
+The API retrieves real-time stock market data, such as share prices, which the TradeSim program uses to display up-to-date financial information to users.
+
 ---
 ## Design Diagrams
 ### UML Class Diagram
