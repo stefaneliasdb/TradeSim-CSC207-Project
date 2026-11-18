@@ -14,6 +14,8 @@ TradeSim is a Java-based paper trading and portfolio analytics application devel
 ### As a trader, I want to be able to view stocks and analytics live.
 ### As a trader, I want to be able to view the history of my networth on the trading app.
 ### As a trader, I want to be able to buy and sell stocks.
+### As a trader, I want to view the amount of each stock I own. (Gil)
+### As a trader, I want to view the performance of my stock picks. (Gil)
 (Add additional user stories as needed.)
 ---
 ## Use Cases
