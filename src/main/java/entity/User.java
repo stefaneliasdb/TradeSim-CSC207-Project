@@ -20,7 +20,6 @@ public class User {
         this.userId = userName + ( (Integer) suffixId).toString();
         suffixId += 1;
         // For now this will assign "unique" userId, more on this later
-        // log in feature will be added later but I gotta learn how to do it first
     }
 
     public String getuserId() {
@@ -43,10 +42,6 @@ public class User {
         return userCash;
     }
 
-    public boolean hasSufficientCash(BigDecimal amount) {
-        return (this.userCash.compareTo(amount) >= 0);
-    }
-
     /**
      *
      * @param amount the amount of cash to be added or subtracted
@@ -60,16 +55,4 @@ public class User {
         }
 
     }
-
-    /**
-     *
-     * @param stock the stock to be added or removed for the user's portfolio
-     * @param amount the amount of stock
-     */
-    public void updatePortfolio(Stock stock, int amount) {
-        if (stock != null && amount != 0) {
-            // will need to way to add/remove stocks to Portfolio
-        }
-    }
-
 }
