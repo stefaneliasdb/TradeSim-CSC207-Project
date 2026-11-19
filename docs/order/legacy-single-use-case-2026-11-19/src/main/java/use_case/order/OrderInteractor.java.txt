@@ -1,0 +1,100 @@
+package use_case.order;
+
+import entity.Order;
+
+import java.math.BigDecimal;
+import java.time.Clock;
+import java.util.Locale;
+import java.util.Objects;
+import java.util.UUID;
+
+/** Executes simulated market orders at the price returned by the quote gateway. */
+public final class OrderInteractor implements OrderInputBoundary {
+    private final OrderQuoteGateway quotes;
+    private final OrderAccountGateway accounts;
+    private final OrderOutputBoundary presenter;
+    private final Clock clock;
+
+    public OrderInteractor(OrderQuoteGateway quotes, OrderAccountGateway accounts,
+                           OrderOutputBoundary presenter, Clock clock) {
+        this.quotes = Objects.requireNonNull(quotes);
+        this.accounts = Objects.requireNonNull(accounts);
+        this.presenter = Objects.requireNonNull(presenter);
+        this.clock = Objects.requireNonNull(clock);
+    }
+
+    @Override
+    public void execute(OrderInputData input) {
+        final String validationError = validate(input);
+        final OrderOutputData result = validationError == null
+                ? placeOrder(input)
+                : OrderOutputData.rejected(OrderStatus.INVALID_REQUEST, validationError);
+        presenter.present(result);
+    }
+
+    private static String validate(OrderInputData input) {
+        if (input == null || input.userID() == null || input.userID().isBlank()) {
+            return "User ID is required.";
+        }
+        if (input.symbol() == null || input.symbol().isBlank()) {
+            return "Stock symbol is required.";
+        }
+        if (input.type() == null) {
+            return "Choose BUY or SELL.";
+        }
+        if (input.quantity() <= 0) {
+            return "Quantity must be greater than zero.";
+        }
+        return null;
+    }
+
+    private OrderOutputData placeOrder(OrderInputData input) {
+        final String symbol = input.symbol().strip().toUpperCase(Locale.ROOT);
+        final OrderAccountSnapshot current = accounts.findAccount(input.userID(), symbol).orElse(null);
+        if (current == null) {
+            return OrderOutputData.rejected(OrderStatus.ACCOUNT_NOT_FOUND, "Account not found.");
+        }
+
+        final BigDecimal price = quotes.findPrice(symbol).orElse(null);
+        if (price == null || price.signum() <= 0) {
+            return OrderOutputData.rejected(OrderStatus.QUOTE_UNAVAILABLE,
+                    "No valid market price is available for " + symbol + ".");
+        }
+
+        final Order order = new Order(UUID.randomUUID().toString(), input.userID(), symbol,
+                input.type(), input.quantity(), price, clock.instant());
+        return switch (order.getType()) {
+            case BUY -> buy(order, current);
+            case SELL -> sell(order, current);
+        };
+    }
+
+    private OrderOutputData buy(Order order, OrderAccountSnapshot current) {
+        final BigDecimal total = order.getTotalValue();
+        if (current.cash().compareTo(total) < 0) {
+            return OrderOutputData.rejected(OrderStatus.INSUFFICIENT_CASH, "Insufficient cash.");
+        }
+        if (order.getQuantity() > Integer.MAX_VALUE - current.quantity()) {
+            return OrderOutputData.rejected(OrderStatus.HOLDING_LIMIT_EXCEEDED,
+                    "This purchase would exceed the maximum holding size.");
+        }
+        return commit(order, current, new OrderAccountSnapshot(
+                current.cash().subtract(total), current.quantity() + order.getQuantity()));
+    }
+
+    private OrderOutputData sell(Order order, OrderAccountSnapshot current) {
+        if (current.quantity() < order.getQuantity()) {
+            return OrderOutputData.rejected(OrderStatus.INSUFFICIENT_SHARES, "Insufficient shares.");
+        }
+        return commit(order, current, new OrderAccountSnapshot(
+                current.cash().add(order.getTotalValue()), current.quantity() - order.getQuantity()));
+    }
+
+    private OrderOutputData commit(Order order, OrderAccountSnapshot current, OrderAccountSnapshot updated) {
+        if (!accounts.commitTrade(order, current, updated)) {
+            return OrderOutputData.rejected(OrderStatus.ACCOUNT_CHANGED,
+                    "Your account changed. Review your balance and holdings, then try again.");
+        }
+        return OrderOutputData.filled(order);
+    }
+}

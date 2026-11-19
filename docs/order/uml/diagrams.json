@@ -1,0 +1,41 @@
+{
+  "diagrams": [
+    {
+      "stem": "order-overview-final",
+      "title": "Final architecture overview",
+      "source": "/Users/nuerlan/IdeaProjects/TradeSim-CSC207-Project/docs/order/uml/order-overview-final.puml",
+      "png": "/Users/nuerlan/IdeaProjects/TradeSim-CSC207-Project/docs/order/uml/order-overview-final.png",
+      "svg": "/Users/nuerlan/IdeaProjects/TradeSim-CSC207-Project/docs/order/uml/order-overview-final.svg"
+    },
+    {
+      "stem": "order-class-final",
+      "title": "Complete class diagram",
+      "source": "/Users/nuerlan/IdeaProjects/TradeSim-CSC207-Project/docs/order/uml/order-class-final.puml",
+      "png": "/Users/nuerlan/IdeaProjects/TradeSim-CSC207-Project/docs/order/uml/order-class-final.png",
+      "svg": "/Users/nuerlan/IdeaProjects/TradeSim-CSC207-Project/docs/order/uml/order-class-final.svg"
+    },
+    {
+      "stem": "order-domain-final",
+      "title": "Entity and shared data contracts",
+      "source": "/Users/nuerlan/IdeaProjects/TradeSim-CSC207-Project/docs/order/uml/order-domain-final.puml",
+      "png": "/Users/nuerlan/IdeaProjects/TradeSim-CSC207-Project/docs/order/uml/order-domain-final.png",
+      "svg": "/Users/nuerlan/IdeaProjects/TradeSim-CSC207-Project/docs/order/uml/order-domain-final.svg"
+    },
+    {
+      "stem": "order-buy-sequence-final",
+      "title": "Buy shares sequence",
+      "source": "/Users/nuerlan/IdeaProjects/TradeSim-CSC207-Project/docs/order/uml/order-buy-sequence-final.puml",
+      "png": "/Users/nuerlan/IdeaProjects/TradeSim-CSC207-Project/docs/order/uml/order-buy-sequence-final.png",
+      "svg": "/Users/nuerlan/IdeaProjects/TradeSim-CSC207-Project/docs/order/uml/order-buy-sequence-final.svg"
+    },
+    {
+      "stem": "order-sell-sequence-final",
+      "title": "Sell shares sequence",
+      "source": "/Users/nuerlan/IdeaProjects/TradeSim-CSC207-Project/docs/order/uml/order-sell-sequence-final.puml",
+      "png": "/Users/nuerlan/IdeaProjects/TradeSim-CSC207-Project/docs/order/uml/order-sell-sequence-final.png",
+      "svg": "/Users/nuerlan/IdeaProjects/TradeSim-CSC207-Project/docs/order/uml/order-sell-sequence-final.svg"
+    }
+  ],
+  "renderer": "PlantUML 1.2026.10; Smetana for class diagrams; local headless Java",
+  "status": "implementation target; trading execution TODO"
+}

@@ -1,0 +1,143 @@
+@startuml order-overview-final
+!pragma layout smetana
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam ArrowColor #4A5C73
+skinparam classBorderColor #65758A
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam noteBackgroundColor #FFF8E7
+skinparam noteBorderColor #BD9351
+skinparam roundcorner 0
+title
+TradeSim Order — final architecture
+BUY and SELL are separate CSC207 use cases
+Class-file scaffolds only; trading execution remains TODO
+endtitle
+left to right direction
+hide empty members
+class OrderView #E6F3E8 {
+  - buyController: BuyOrderController
+  - sellController: SellOrderController
+  - viewModel: OrderViewModel
+  - currentUserId: Supplier<String>
+  - refreshPortfolio: Consumer<String>
+}
+class OrderViewModel #E6F3E8 {
+  - status: OrderStatus
+  - message, orderID, totalText: String
+  + update(...): void
+  + addPropertyChangeListener(...): void
+}
+package "BUY use case" {
+ class BuyOrderController #E6F3E8 {
+   + placeOrder(userID, symbol, quantity): void
+ }
+ interface BuyOrderInputBoundary #FBE6EC {
+   + execute(PlaceOrderInputData): void
+ }
+ class BuyOrderInteractor #FBE6EC {
+   {static} - TYPE = BUY
+   + execute(PlaceOrderInputData): void
+ }
+ interface BuyOrderOutputBoundary #FBE6EC {
+   + present(OrderOutputData): void
+ }
+ class BuyOrderPresenter #E6F3E8 {
+   + present(OrderOutputData): void
+ }
+}
+package "SELL use case" {
+ class SellOrderController #E6F3E8 {
+   + placeOrder(userID, symbol, quantity): void
+ }
+ interface SellOrderInputBoundary #FBE6EC {
+   + execute(PlaceOrderInputData): void
+ }
+ class SellOrderInteractor #FBE6EC {
+   {static} - TYPE = SELL
+   + execute(PlaceOrderInputData): void
+ }
+ interface SellOrderOutputBoundary #FBE6EC {
+   + present(OrderOutputData): void
+ }
+ class SellOrderPresenter #E6F3E8 {
+   + present(OrderOutputData): void
+ }
+}
+package "Shared Order contracts" #FBE6EC {
+ interface OrderQuoteGateway {
+   + findPrice(symbol): Optional<BigDecimal>
+ }
+ interface OrderAccountGateway {
+   + findAccount(userID, symbol): Optional<OrderAccountSnapshot>
+   + commitTrade(order, expected, updated): boolean
+ }
+}
+class Order <<existing immutable entity>> #FFF3CF {
+  - type: OrderType
+  + getTotalValue(): BigDecimal
+}
+class StockQuoteGateway <<shared team reference>> #EDF0F5 {
+  - stockLookup: Function<String, Optional<Stock>>
+  + findPrice(symbol): Optional<BigDecimal>
+}
+class OrderAccountAdapter <<integration TODO>> #FFF0DB {
+ + findAccount(...): Optional<OrderAccountSnapshot>
+ + commitTrade(...): boolean
+}
+class UserDataAccessObject <<team reference>> #EDF0F5
+OrderView --> BuyOrderController
+OrderView --> SellOrderController
+OrderView --> OrderViewModel : observes
+BuyOrderController --> BuyOrderInputBoundary
+SellOrderController --> SellOrderInputBoundary
+BuyOrderInteractor ..|> BuyOrderInputBoundary
+SellOrderInteractor ..|> SellOrderInputBoundary
+BuyOrderInteractor --> BuyOrderOutputBoundary
+SellOrderInteractor --> SellOrderOutputBoundary
+BuyOrderPresenter ..|> BuyOrderOutputBoundary
+SellOrderPresenter ..|> SellOrderOutputBoundary
+BuyOrderPresenter --> OrderViewModel
+SellOrderPresenter --> OrderViewModel
+BuyOrderInteractor --> OrderQuoteGateway
+SellOrderInteractor --> OrderQuoteGateway
+BuyOrderInteractor --> OrderAccountGateway
+SellOrderInteractor --> OrderAccountGateway
+BuyOrderInteractor ..> Order : creates BUY
+SellOrderInteractor ..> Order : creates SELL
+StockQuoteGateway ..|> OrderQuoteGateway
+OrderAccountAdapter ..|> OrderAccountGateway
+OrderAccountAdapter ..> UserDataAccessObject : planned only
+note top of OrderView
+  Team collaboration via callbacks, wired in App:
+  currentUserId = session::getUserID
+  refreshPortfolio = portfolioController::viewPortfolio
+  On a new FILLED ID, refresh once after successful commit.
+end note
+note bottom of OrderAccountGateway
+  Commit cash + target holding + history together.
+  Account-wide coordination; preserve other data.
+  False only for stale/missing account, with zero writes.
+  Actual transaction/storage support is still required.
+end note
+note bottom of Order
+  Shared data: PlaceOrderInputData(userID, symbol, quantity),
+  OrderOutputData(status, orderID, totalValue),
+  OrderAccountSnapshot(cash, quantity).
+  Full fields and signatures are in order-class-final.puml.
+end note
+legend bottom
+  |= Color |= Responsibility |
+  |<#E6F3E8> Green | Order UI / interface adapters |
+  |<#FBE6EC> Pink | Order use-case contracts / rules |
+  |<#FFF3CF> Gold | Existing Order entity / enum |
+  |<#EDF0F5> Gray | Team model reference; unchanged |
+  |<#FFF0DB> Amber | Order adapter; storage integration TODO |
+  Dashed hollow triangle = implements. Solid arrow = stored dependency.
+  Dashed open arrow = uses / creates; planned links are labelled.
+  Final target: Java files are scaffolds; execution and integration are TODO.
+endlegend
+@enduml

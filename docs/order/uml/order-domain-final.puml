@@ -1,0 +1,121 @@
+@startuml order-domain-final
+!pragma layout smetana
+skinparam shadowing false
+skinparam classAttributeIconSize 0
+skinparam defaultFontName Arial
+skinparam defaultFontSize 15
+skinparam ArrowColor #4A5C73
+skinparam classBorderColor #65758A
+skinparam packageStyle rectangle
+skinparam linetype ortho
+skinparam noteBackgroundColor #FFF8E7
+skinparam noteBorderColor #BD9351
+skinparam roundcorner 0
+title
+TradeSim Order — entity and shared data contracts
+Record / result structures are shared by BUY and SELL
+endtitle
+left to right direction
+package "Order shared contracts" #FBE6EC {
+  class PlaceOrderInputData <<record>> {
+    - userID: String {readOnly}
+    - symbol: String {readOnly}
+    - quantity: int {readOnly}
+    + userID(): String
+    + symbol(): String
+    + quantity(): int
+  }
+  class OrderAccountSnapshot <<record>> {
+    - cash: BigDecimal {readOnly}
+    - quantity: int {readOnly}
+    + cash(): BigDecimal
+    + quantity(): int
+  }
+  class OrderOutputData <<immutable result>> {
+    - status: OrderStatus {readOnly}
+    - orderID: String {readOnly; null when rejected}
+    - totalValue: BigDecimal {readOnly; null when rejected}
+    - OrderOutputData(status: OrderStatus, orderID: String, totalValue: BigDecimal)
+    {static} + filled(order: Order): OrderOutputData
+    {static} + rejected(status: OrderStatus): OrderOutputData
+    + getStatus(): OrderStatus
+    + isSuccess(): boolean
+    + getOrderID(): String
+    + getTotalValue(): BigDecimal
+  }
+  enum OrderStatus {
+    FILLED
+    INVALID_REQUEST
+    ACCOUNT_NOT_FOUND
+    QUOTE_UNAVAILABLE
+    INSUFFICIENT_CASH
+    INSUFFICIENT_SHARES
+    HOLDING_LIMIT_EXCEEDED
+    ACCOUNT_CHANGED
+  }
+  interface OrderQuoteGateway {
+    + findPrice(symbol: String): Optional<BigDecimal>
+  }
+  interface OrderAccountGateway {
+    + findAccount(userID: String, symbol: String): Optional<OrderAccountSnapshot>
+    + commitTrade(order: Order, expected: OrderAccountSnapshot, updated: OrderAccountSnapshot): boolean
+  }
+}
+package "Order domain" #FFF3CF {
+  class Order <<existing immutable entity>> {
+    - orderID: String {readOnly}
+    - userID: String {readOnly}
+    - symbol: String {readOnly}
+    - type: OrderType {readOnly}
+    - quantity: int {readOnly}
+    - executionPrice: BigDecimal {readOnly}
+    - executedAt: Instant {readOnly}
+    + Order(orderID: String, userID: String, symbol: String, type: OrderType, quantity: int, executionPrice: BigDecimal, executedAt: Instant)
+    + getOrderID(): String
+    + getUserID(): String
+    + getSymbol(): String
+    + getType(): OrderType
+    + getQuantity(): int
+    + getExecutionPrice(): BigDecimal
+    + getExecutedAt(): Instant
+    + getTotalValue(): BigDecimal
+  }
+  enum OrderType {
+    BUY
+    SELL
+  }
+}
+Order --> OrderType
+OrderOutputData --> OrderStatus
+OrderAccountGateway ..> OrderAccountSnapshot
+OrderAccountGateway ..> Order
+note right of Order
+  quantity > 0; executionPrice > 0.
+  IDs and symbol are nonblank; type/time are non-null.
+  Total = executionPrice * quantity.
+  No mutable Stock reference, and no account mutation here.
+end note
+note bottom of PlaceOrderInputData
+  No OrderType field: the selected use case fixes direction.
+  No client-supplied execution price.
+end note
+note bottom of OrderOutputData
+  No message field: presentation belongs to Presenters.
+  FILLED contains ID and total; rejected contains neither.
+end note
+note bottom of OrderAccountSnapshot
+  Coherent read of available cash + ONE requested stock quantity.
+  cash is non-null and nonnegative; quantity is nonnegative.
+end note
+legend bottom
+  |= Color |= Responsibility |
+  |<#E6F3E8> Green | Order UI / interface adapters |
+  |<#FBE6EC> Pink | Order use-case contracts / rules |
+  |<#FFF3CF> Gold | Existing Order entity / enum |
+  |<#EDF0F5> Gray | Team model reference; unchanged |
+  |<#FFF0DB> Amber | Order adapter; storage integration TODO |
+  Dashed hollow triangle = implements. Solid arrow = stored dependency.
+  Dashed open arrow = uses / creates; planned links are labelled.
+  Final target: Java files are scaffolds; execution and integration are TODO.
+endlegend
+@enduml

@@ -1,0 +1,34 @@
+{
+  "src/main/java/use_case/order/OrderInteractor.java": {
+    "backup": "docs/order/legacy-single-use-case-2026-11-19/src/main/java/use_case/order/OrderInteractor.java.txt",
+    "sha256": "c3342a42d3b1a2768a0b145bab7103f2686416b5521b419fd45c43c84d3839ac"
+  },
+  "src/main/java/use_case/order/OrderInputBoundary.java": {
+    "backup": "docs/order/legacy-single-use-case-2026-11-19/src/main/java/use_case/order/OrderInputBoundary.java.txt",
+    "sha256": "981daf12dea5d2b47919487e4a78e87977db4ee854c102627aa381788a0abc87"
+  },
+  "src/main/java/use_case/order/OrderInputData.java": {
+    "backup": "docs/order/legacy-single-use-case-2026-11-19/src/main/java/use_case/order/OrderInputData.java.txt",
+    "sha256": "9e2aefadc5a2008bc9e4de6fc9e99f76f5066e0e4f2b81b00fc34966c36cb06c"
+  },
+  "src/main/java/use_case/order/OrderOutputBoundary.java": {
+    "backup": "docs/order/legacy-single-use-case-2026-11-19/src/main/java/use_case/order/OrderOutputBoundary.java.txt",
+    "sha256": "db3788df1aafd9418440068263ae9a1928d3a0ef3a49121853b0af7289f293a1"
+  },
+  "src/main/java/data_access/order/StockOrderQuoteGateway.java": {
+    "backup": "docs/order/legacy-single-use-case-2026-11-19/src/main/java/data_access/order/StockOrderQuoteGateway.java.txt",
+    "sha256": "661576bf9041d676e5d96c80744f36771b253c508451c05f696b7556beffb609"
+  },
+  "src/test/java/use_case/order/OrderInteractorTest.java": {
+    "backup": "docs/order/legacy-single-use-case-2026-11-19/src/test/java/use_case/order/OrderInteractorTest.java.txt",
+    "sha256": "9047d38a3fbe2ea0afcdc188f61f03506d634347770a1e4cd8057b27846c29b2"
+  },
+  "src/main/java/use_case/order/OrderOutputData.java": {
+    "backup": "docs/order/legacy-single-use-case-2026-11-19/src/main/java/use_case/order/OrderOutputData.java.txt",
+    "sha256": "003ad3b7779b18908648edbcd56026cd5674c99e7c1a2a89723562cbe2f2dd30"
+  },
+  "src/main/java/use_case/order/OrderAccountGateway.java": {
+    "backup": "docs/order/legacy-single-use-case-2026-11-19/src/main/java/use_case/order/OrderAccountGateway.java.txt",
+    "sha256": "e86f65d0c691e2c640060044c6f887124252af08c4a5bbe6263057c7110ee40b"
+  }
+}

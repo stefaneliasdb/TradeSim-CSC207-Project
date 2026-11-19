@@ -1,0 +1,52 @@
+package use_case.order;
+
+import entity.Order;
+
+import java.math.BigDecimal;
+
+public final class OrderOutputData {
+    private final OrderStatus status;
+    private final String message;
+    private final String orderID;
+    private final BigDecimal totalValue;
+
+    private OrderOutputData(OrderStatus status, String message, String orderID, BigDecimal totalValue) {
+        this.status = status;
+        this.message = message;
+        this.orderID = orderID;
+        this.totalValue = totalValue;
+    }
+
+    static OrderOutputData filled(Order order) {
+        return new OrderOutputData(OrderStatus.FILLED, "Order filled.", order.getOrderID(), order.getTotalValue());
+    }
+
+    static OrderOutputData rejected(OrderStatus status, String message) {
+        if (status == OrderStatus.FILLED) {
+            throw new IllegalArgumentException("A rejected order cannot be filled.");
+        }
+        return new OrderOutputData(status, message, null, null);
+    }
+
+    public OrderStatus getStatus() {
+        return status;
+    }
+
+    public boolean isSuccess() {
+        return status == OrderStatus.FILLED;
+    }
+
+    public String getMessage() {
+        return message;
+    }
+
+    /** Returns the executed order ID, or null if the order was rejected. */
+    public String getOrderID() {
+        return orderID;
+    }
+
+    /** Returns price times quantity, or null if the order was rejected. */
+    public BigDecimal getTotalValue() {
+        return totalValue;
+    }
+}

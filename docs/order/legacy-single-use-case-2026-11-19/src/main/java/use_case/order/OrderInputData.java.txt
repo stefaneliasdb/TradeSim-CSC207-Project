@@ -1,0 +1,6 @@
+package use_case.order;
+
+import entity.OrderType;
+
+public record OrderInputData(String userID, String symbol, OrderType type, int quantity) {
+}

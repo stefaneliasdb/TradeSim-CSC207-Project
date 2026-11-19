@@ -1,0 +1,207 @@
+package use_case.order;
+
+import data_access.order.StockOrderQuoteGateway;
+import entity.Order;
+import entity.OrderType;
+import entity.Stock;
+import org.junit.jupiter.api.Test;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.NullSource;
+import org.junit.jupiter.params.provider.ValueSource;
+
+import java.math.BigDecimal;
+import java.time.Clock;
+import java.time.Instant;
+import java.time.ZoneOffset;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertFalse;
+import static org.junit.jupiter.api.Assertions.assertNull;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+class OrderInteractorTest {
+    private static final String USER_ID = "trader1";
+    private static final String SYMBOL = "AAPL";
+    private static final Instant NOW = Instant.parse("2026-11-10T22:00:00Z");
+
+    private final AccountStore accounts = new AccountStore();
+    private final List<OrderOutputData> results = new ArrayList<>();
+    private BigDecimal marketPrice = new BigDecimal("10.15");
+    private final OrderInputBoundary orders = new OrderInteractor(
+            symbol -> SYMBOL.equals(symbol) ? Optional.ofNullable(marketPrice) : Optional.empty(),
+            accounts, results::add, Clock.fixed(NOW, ZoneOffset.UTC));
+
+    @Test
+    void buyWithExactCashRecordsOrderAndReturnsItsConfirmation() {
+        accounts.current = new OrderAccountSnapshot(new BigDecimal("30.45"), 0);
+        final Stock stock = new Stock(SYMBOL, "Apple", "USD", marketPrice);
+        final OrderQuoteGateway quotes = new StockOrderQuoteGateway(
+                symbol -> SYMBOL.equals(symbol) ? Optional.of(stock) : Optional.empty(), "usd");
+        final OrderInputBoundary orderWithStockQuote = new OrderInteractor(
+                quotes, accounts, results::add, Clock.fixed(NOW, ZoneOffset.UTC));
+
+        orderWithStockQuote.execute(new OrderInputData(USER_ID, " aapl ", OrderType.BUY, 3));
+
+        assertEquals(new OrderAccountSnapshot(new BigDecimal("0.00"), 3), accounts.current);
+        assertEquals(1, accounts.history.size());
+        final Order order = accounts.history.getFirst();
+        assertEquals(USER_ID, order.getUserID());
+        assertEquals(SYMBOL, order.getSymbol());
+        assertEquals(OrderType.BUY, order.getType());
+        assertEquals(3, order.getQuantity());
+        assertEquals(marketPrice, order.getExecutionPrice());
+        assertEquals(NOW, order.getExecutedAt());
+        final OrderOutputData result = onlyResult();
+        assertEquals(OrderStatus.FILLED, result.getStatus());
+        assertTrue(result.isSuccess());
+        assertFalse(result.getOrderID().isBlank());
+        assertEquals(order.getOrderID(), result.getOrderID());
+        assertEquals(new BigDecimal("30.45"), result.getTotalValue());
+    }
+
+    @Test
+    void sellingEntirePositionCreditsCashAndAppendsToExistingHistory() {
+        orders.execute(new OrderInputData(USER_ID, SYMBOL, OrderType.BUY, 2));
+        final Order buy = accounts.history.getFirst();
+        results.clear();
+        marketPrice = new BigDecimal("12.40");
+
+        orders.execute(new OrderInputData(USER_ID, SYMBOL, OrderType.SELL, 2));
+
+        assertEquals(new OrderAccountSnapshot(new BigDecimal("104.50"), 0), accounts.current);
+        assertEquals(2, accounts.history.size());
+        assertEquals(buy, accounts.history.getFirst());
+        final Order sell = accounts.history.getLast();
+        assertEquals(OrderType.SELL, sell.getType());
+        final OrderOutputData result = onlyResult();
+        assertTrue(result.isSuccess());
+        assertEquals(sell.getOrderID(), result.getOrderID());
+        assertEquals(new BigDecimal("24.80"), result.getTotalValue());
+    }
+
+    @Test
+    void insufficientCashLeavesAccountAndHistoryUnchanged() {
+        assertRejectedWithoutCommit(new OrderInputData(USER_ID, SYMBOL, OrderType.BUY, 10),
+                OrderStatus.INSUFFICIENT_CASH, "Insufficient cash.");
+    }
+
+    @Test
+    void sellingUnownedSharesLeavesAccountAndHistoryUnchanged() {
+        assertRejectedWithoutCommit(new OrderInputData(USER_ID, SYMBOL, OrderType.SELL, 1),
+                OrderStatus.INSUFFICIENT_SHARES, "Insufficient shares.");
+    }
+
+    @Test
+    void rejectsInvalidQuantityBeforeReadingAccount() {
+        assertRejectedWithoutCommit(new OrderInputData(USER_ID, SYMBOL, OrderType.BUY, 0),
+                OrderStatus.INVALID_REQUEST, "Quantity must be greater than zero.");
+        assertEquals(0, accounts.lookups);
+    }
+
+    @Test
+    void rejectsUnknownAccount() {
+        assertRejectedWithoutCommit(new OrderInputData("unknown", SYMBOL, OrderType.BUY, 1),
+                OrderStatus.ACCOUNT_NOT_FOUND, "Account not found.");
+    }
+
+    @ParameterizedTest
+    @NullSource
+    @ValueSource(strings = {"0.00", "-1"})
+    void missingOrNonpositivePriceRejectsTrade(String price) {
+        marketPrice = price == null ? null : new BigDecimal(price);
+
+        assertRejectedWithoutCommit(new OrderInputData(USER_ID, SYMBOL, OrderType.BUY, 1),
+                OrderStatus.QUOTE_UNAVAILABLE, "No valid market price is available for AAPL.");
+    }
+
+    @Test
+    void stockInDifferentCurrencyCannotSpendAccountCash() {
+        final Stock stock = new Stock(SYMBOL, "Apple", "USD", marketPrice);
+        final OrderQuoteGateway quotes = new StockOrderQuoteGateway(symbol -> Optional.of(stock), "CAD");
+        final OrderInputBoundary orderWithStockQuote = new OrderInteractor(
+                quotes, accounts, results::add, Clock.fixed(NOW, ZoneOffset.UTC));
+        final OrderAccountSnapshot before = accounts.current;
+
+        orderWithStockQuote.execute(new OrderInputData(USER_ID, SYMBOL, OrderType.BUY, 1));
+
+        assertEquals(before, accounts.current);
+        assertEquals(0, accounts.commitAttempts);
+        assertTrue(accounts.history.isEmpty());
+        assertRejection(OrderStatus.QUOTE_UNAVAILABLE, "No valid market price is available for AAPL.");
+    }
+
+    @Test
+    void buyRejectsHoldingSizeOverflow() {
+        accounts.current = new OrderAccountSnapshot(new BigDecimal("100.00"), Integer.MAX_VALUE);
+
+        assertRejectedWithoutCommit(new OrderInputData(USER_ID, SYMBOL, OrderType.BUY, 1),
+                OrderStatus.HOLDING_LIMIT_EXCEEDED, "This purchase would exceed the maximum holding size.");
+    }
+
+    @Test
+    void staleSnapshotReturnsFailureAndPreservesNewerAccountState() {
+        final OrderAccountSnapshot newer = new OrderAccountSnapshot(new BigDecimal("90.00"), 1);
+        final OrderInputBoundary concurrentOrders = new OrderInteractor(symbol -> {
+            accounts.current = newer;
+            return Optional.of(marketPrice);
+        }, accounts, results::add, Clock.fixed(NOW, ZoneOffset.UTC));
+
+        concurrentOrders.execute(new OrderInputData(USER_ID, SYMBOL, OrderType.BUY, 1));
+
+        assertEquals(1, accounts.commitAttempts);
+        assertEquals(newer, accounts.current);
+        assertTrue(accounts.history.isEmpty());
+        assertRejection(OrderStatus.ACCOUNT_CHANGED,
+                "Your account changed. Review your balance and holdings, then try again.");
+    }
+
+    private void assertRejectedWithoutCommit(OrderInputData input, OrderStatus status, String message) {
+        final OrderAccountSnapshot before = accounts.current;
+        orders.execute(input);
+        assertEquals(0, accounts.commitAttempts);
+        assertEquals(before, accounts.current);
+        assertTrue(accounts.history.isEmpty());
+        assertRejection(status, message);
+    }
+
+    private void assertRejection(OrderStatus status, String message) {
+        final OrderOutputData result = onlyResult();
+        assertEquals(status, result.getStatus());
+        assertFalse(result.isSuccess());
+        assertEquals(message, result.getMessage());
+        assertNull(result.getOrderID());
+        assertNull(result.getTotalValue());
+    }
+
+    private OrderOutputData onlyResult() {
+        assertEquals(1, results.size());
+        return results.getFirst();
+    }
+
+    private static final class AccountStore implements OrderAccountGateway {
+        private OrderAccountSnapshot current = new OrderAccountSnapshot(new BigDecimal("100.00"), 0);
+        private final List<Order> history = new ArrayList<>();
+        private int lookups;
+        private int commitAttempts;
+
+        @Override
+        public Optional<OrderAccountSnapshot> findAccount(String userID, String symbol) {
+            lookups++;
+            return USER_ID.equals(userID) ? Optional.of(current) : Optional.empty();
+        }
+
+        @Override
+        public boolean commitTrade(Order order, OrderAccountSnapshot expected, OrderAccountSnapshot updated) {
+            commitAttempts++;
+            if (current.cash().compareTo(expected.cash()) != 0 || current.quantity() != expected.quantity()) {
+                return false;
+            }
+            current = updated;
+            history.add(order);
+            return true;
+        }
+    }
+}
