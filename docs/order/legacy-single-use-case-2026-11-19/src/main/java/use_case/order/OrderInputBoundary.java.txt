@@ -1,5 +1,0 @@
-package use_case.order;
-
-public interface OrderInputBoundary {
-    void execute(OrderInputData input);
-}

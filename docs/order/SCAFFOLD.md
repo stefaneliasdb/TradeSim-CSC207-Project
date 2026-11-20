@@ -73,17 +73,6 @@ match the actual team storage API. Cash, target holdings and appended history mu
 with account-wide concurrency coordination; `findById` and `save` signatures alone do not establish
 that guarantee. A live mutable User must not leak partially applied changes.
 
-## Preserved prototype and restoration
+## UML files
 
-The earlier combined-use-case prototype is preserved byte for byte in
-`legacy-single-use-case-2026-11-19/`, retaining original project-relative paths with a `.txt` suffix.
-Its `manifest.json` records each original path, backup path and SHA-256. The historical interactor,
-input/output boundaries, input DTO, stock quote adapter and corresponding test are no longer active
-Java sources. Original versions of the changed result DTO and account gateway are backed up too.
-
-To restore a historical file, copy the `.java.txt` backup to its original path shown in the manifest.
-The historical test exercises the former combined-use-case contract; it is not evidence that this
-new scaffold is implemented or tested. Older diagrams elsewhere under `docs/` are historical;
-the split-use-case UML under this Order documentation area is the new target.
-
-No Git staging, commit or push is part of this setup.
+The current split-use-case PlantUML sources and rendered diagrams are in `docs/order/uml/`.
