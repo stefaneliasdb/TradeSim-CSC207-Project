@@ -1,9 +1,11 @@
+
 package interface_adapter;
 
 import entity.Stock;
 import use_case.ViewStockListOutputBoundary;
 import use_case.ViewStockListOutputData;
 
+import java.math.RoundingMode;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -26,12 +28,19 @@ public class ViewStockListPresenter
         for (Stock stock : outputData.getStocks()) {
 
             String price = stock.getCurrency() + " "
-                    + stock.getCurrentPrice();
+                    + stock.getCurrentPrice()
+                    .setScale(2, RoundingMode.HALF_UP)
+                    .toPlainString();
 
             String dailyChange = stock.getDailyPercentageChange()
-                    .signum() > 0 ? "+" : "";
+                    .setScale(2, RoundingMode.HALF_UP)
+                    .toPlainString();
 
-            dailyChange += stock.getDailyPercentageChange() + "%";
+            if (stock.getDailyPercentageChange().signum() > 0) {
+                dailyChange = "+" + dailyChange;
+            }
+
+            dailyChange += "%";
 
             StockListState state = new StockListState(
                     stock.getSymbol(),

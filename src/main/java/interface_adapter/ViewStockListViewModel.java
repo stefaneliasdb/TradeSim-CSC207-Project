@@ -3,6 +3,7 @@ package interface_adapter;
 import java.beans.PropertyChangeListener;
 import java.beans.PropertyChangeSupport;
 import java.util.List;
+import java.util.Objects;
 
 public class ViewStockListViewModel {
 
@@ -11,6 +12,7 @@ public class ViewStockListViewModel {
 
     private List<StockListState> stocks = List.of();
     private String errorMessage = "";
+    private String selectedSymbol = null;
 
     public List<StockListState> getStocks() {
         return stocks;
@@ -18,6 +20,10 @@ public class ViewStockListViewModel {
 
     public String getErrorMessage() {
         return errorMessage;
+    }
+
+    public String getSelectedSymbol() {
+        return selectedSymbol;
     }
 
     public void setStocks(List<StockListState> stocks) {
@@ -29,6 +35,22 @@ public class ViewStockListViewModel {
         this.errorMessage = errorMessage;
         support.firePropertyChange(
                 "errorMessage", null, errorMessage);
+    }
+
+    public void setSelectedSymbol(String selectedSymbol) {
+        String oldSymbol = this.selectedSymbol;
+
+        if (Objects.equals(oldSymbol, selectedSymbol)) {
+            return;
+        }
+
+        this.selectedSymbol = selectedSymbol;
+
+        support.firePropertyChange(
+                "selectedSymbol",
+                oldSymbol,
+                selectedSymbol
+        );
     }
 
     public void addPropertyChangeListener(

@@ -6,8 +6,13 @@ import interface_adapter.ViewStockListViewModel;
 
 import javax.swing.*;
 import java.awt.*;
+import java.awt.event.MouseAdapter;
+import java.awt.event.MouseEvent;
 
 public class ViewStockListView extends JPanel {
+
+    private static final Color SELECTED_COLOR =
+            new Color(220, 235, 250);
 
     private final ViewStockListViewModel viewModel;
     private final JPanel stockPanel;
@@ -23,7 +28,8 @@ public class ViewStockListView extends JPanel {
 
         JLabel title = new JLabel("Stocks");
         title.setFont(new Font("SansSerif", Font.BOLD, 18));
-        title.setBorder(BorderFactory.createEmptyBorder(15, 12, 15, 12));
+        title.setBorder(
+                BorderFactory.createEmptyBorder(15, 12, 15, 12));
         add(title, BorderLayout.NORTH);
 
         stockPanel = new JPanel();
@@ -36,14 +42,23 @@ public class ViewStockListView extends JPanel {
         add(scrollPane, BorderLayout.CENTER);
 
         viewModel.addPropertyChangeListener(event -> {
-            if ("stocks".equals(event.getPropertyName())) {
+            String property = event.getPropertyName();
+
+            if ("stocks".equals(property)
+                    || "selectedSymbol".equals(property)) {
                 SwingUtilities.invokeLater(this::refreshStocks);
             }
         });
 
-        controller.execute();
+        // Load market data without blocking the Swing UI thread.
+        new SwingWorker<Void, Void>() {
+            @Override
+            protected Void doInBackground() {
+                controller.execute();
+                return null;
+            }
+        }.execute();
     }
-
 
     private void refreshStocks() {
         stockPanel.removeAll();
@@ -56,10 +71,22 @@ public class ViewStockListView extends JPanel {
             row.setMaximumSize(
                     new Dimension(Integer.MAX_VALUE, 75));
 
+            boolean selected = stock.getSymbol().equals(
+                    viewModel.getSelectedSymbol());
+
+            Color background = selected
+                    ? SELECTED_COLOR
+                    : stockPanel.getBackground();
+
+            row.setBackground(background);
+            row.setCursor(
+                    Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
             // LEFT: Stock symbol and company name
             JPanel namePanel = new JPanel();
             namePanel.setLayout(
                     new BoxLayout(namePanel, BoxLayout.Y_AXIS));
+            namePanel.setOpaque(false);
 
             JLabel symbol = new JLabel(stock.getSymbol());
             symbol.setFont(
@@ -67,7 +94,6 @@ public class ViewStockListView extends JPanel {
 
             String companyName = stock.getCompanyName();
 
-            // Shorten long company names
             if (companyName.length() > 18) {
                 companyName = companyName.substring(0, 15) + "...";
             }
@@ -83,8 +109,8 @@ public class ViewStockListView extends JPanel {
             JPanel pricePanel = new JPanel();
             pricePanel.setLayout(
                     new BoxLayout(pricePanel, BoxLayout.Y_AXIS));
-
             pricePanel.setPreferredSize(new Dimension(100, 45));
+            pricePanel.setOpaque(false);
 
             JLabel price = new JLabel(stock.getPrice());
             price.setFont(
@@ -92,7 +118,6 @@ public class ViewStockListView extends JPanel {
 
             JLabel change = new JLabel(
                     stock.getDailyPercentageChange());
-
             change.setFont(
                     new Font("SansSerif", Font.PLAIN, 11));
 
@@ -112,6 +137,22 @@ public class ViewStockListView extends JPanel {
 
             row.add(namePanel, BorderLayout.CENTER);
             row.add(pricePanel, BorderLayout.EAST);
+
+            // Allow clicking anywhere in the stock row.
+            MouseAdapter clickListener = new MouseAdapter() {
+                @Override
+                public void mouseClicked(MouseEvent event) {
+                    viewModel.setSelectedSymbol(stock.getSymbol());
+                }
+            };
+
+            row.addMouseListener(clickListener);
+            namePanel.addMouseListener(clickListener);
+            pricePanel.addMouseListener(clickListener);
+            symbol.addMouseListener(clickListener);
+            company.addMouseListener(clickListener);
+            price.addMouseListener(clickListener);
+            change.addMouseListener(clickListener);
 
             stockPanel.add(row);
             stockPanel.add(new JSeparator());
