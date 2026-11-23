@@ -44,37 +44,57 @@ public class ViewStockListView extends JPanel {
         controller.execute();
     }
 
+
     private void refreshStocks() {
         stockPanel.removeAll();
 
         for (StockListState stock : viewModel.getStocks()) {
-            JPanel row = new JPanel(new BorderLayout(8, 4));
-            row.setBorder(BorderFactory.createEmptyBorder(10, 12, 10, 12));
-            row.setMaximumSize(
-                    new Dimension(Integer.MAX_VALUE, 65));
 
+            JPanel row = new JPanel(new BorderLayout(8, 0));
+            row.setBorder(
+                    BorderFactory.createEmptyBorder(12, 10, 12, 10));
+            row.setMaximumSize(
+                    new Dimension(Integer.MAX_VALUE, 75));
+
+            // LEFT: Stock symbol and company name
             JPanel namePanel = new JPanel();
             namePanel.setLayout(
                     new BoxLayout(namePanel, BoxLayout.Y_AXIS));
 
             JLabel symbol = new JLabel(stock.getSymbol());
-            symbol.setFont(new Font("SansSerif", Font.BOLD, 14));
+            symbol.setFont(
+                    new Font("SansSerif", Font.BOLD, 14));
 
-            JLabel company = new JLabel(stock.getCompanyName());
-            company.setFont(new Font("SansSerif", Font.PLAIN, 11));
+            String companyName = stock.getCompanyName();
+
+            // Shorten long company names
+            if (companyName.length() > 18) {
+                companyName = companyName.substring(0, 15) + "...";
+            }
+
+            JLabel company = new JLabel(companyName);
+            company.setFont(
+                    new Font("SansSerif", Font.PLAIN, 11));
 
             namePanel.add(symbol);
             namePanel.add(company);
 
+            // RIGHT: Price and daily percentage change
             JPanel pricePanel = new JPanel();
             pricePanel.setLayout(
                     new BoxLayout(pricePanel, BoxLayout.Y_AXIS));
 
+            pricePanel.setPreferredSize(new Dimension(100, 45));
+
             JLabel price = new JLabel(stock.getPrice());
-            price.setFont(new Font("SansSerif", Font.BOLD, 12));
+            price.setFont(
+                    new Font("SansSerif", Font.BOLD, 12));
 
             JLabel change = new JLabel(
                     stock.getDailyPercentageChange());
+
+            change.setFont(
+                    new Font("SansSerif", Font.PLAIN, 11));
 
             String changeText = stock.getDailyPercentageChange();
 
@@ -84,10 +104,13 @@ public class ViewStockListView extends JPanel {
                 change.setForeground(new Color(190, 40, 40));
             }
 
+            price.setAlignmentX(Component.RIGHT_ALIGNMENT);
+            change.setAlignmentX(Component.RIGHT_ALIGNMENT);
+
             pricePanel.add(price);
             pricePanel.add(change);
 
-            row.add(namePanel, BorderLayout.WEST);
+            row.add(namePanel, BorderLayout.CENTER);
             row.add(pricePanel, BorderLayout.EAST);
 
             stockPanel.add(row);
