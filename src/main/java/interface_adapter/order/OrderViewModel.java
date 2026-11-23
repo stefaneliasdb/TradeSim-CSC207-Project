@@ -9,39 +9,50 @@ import java.util.Objects;
 /** Observable display state shared by the buy and sell presenters. */
 public final class OrderViewModel {
     private final PropertyChangeSupport support;
-    private OrderStatus status;
-    private String message = "";
-    private String orderID;
-    private String totalText = "";
+    private volatile OrderState state = new OrderState(null, "", null, "");
 
     public OrderViewModel() {
         support = new PropertyChangeSupport(this);
     }
 
     public OrderStatus getStatus() {
-        return status;
+        return state.status();
     }
 
     public String getMessage() {
-        return message;
+        return state.message();
     }
 
     public String getOrderID() {
-        return orderID;
+        return state.orderID();
     }
 
     public String getTotalText() {
-        return totalText;
+        return state.totalText();
+    }
+
+    public OrderState getState() {
+        return state;
     }
 
     public void update(OrderStatus status, String message, String orderID, String totalText) {
-        // TODO: Store the display fields together, then fire one property-change notification.
-        // Initial status is null until a result exists; rejection must clear stale success values.
-        throw new UnsupportedOperationException("TODO: publish the order display state.");
+        Objects.requireNonNull(status);
+        Objects.requireNonNull(message);
+        final OrderState next = status == OrderStatus.FILLED
+                ? new OrderState(status, message, Objects.requireNonNull(orderID),
+                        Objects.requireNonNull(totalText))
+                : new OrderState(status, message, null, "");
+        state = next;
+        // A repeated rejection is still a completed request, so notify even if its text is unchanged.
+        support.firePropertyChange("state", null, next);
     }
 
     public void addPropertyChangeListener(PropertyChangeListener listener) {
         support.addPropertyChangeListener(Objects.requireNonNull(listener));
+    }
+
+    public void removePropertyChangeListener(PropertyChangeListener listener) {
+        support.removePropertyChangeListener(listener);
     }
 }
 

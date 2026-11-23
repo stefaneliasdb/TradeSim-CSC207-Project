@@ -1,6 +1,7 @@
 package interface_adapter.order.buy;
 
 import use_case.order.buy.BuyOrderInputBoundary;
+import use_case.order.PlaceOrderInputData;
 
 import java.util.Objects;
 
@@ -13,9 +14,7 @@ public final class BuyOrderController {
     }
 
     public void placeOrder(String userID, String symbol, int quantity) {
-        // TODO: Create PlaceOrderInputData and delegate to input.execute.
-        // The user ID must come from the signed-in session, not an editable account selector.
-        throw new UnsupportedOperationException("TODO: connect the buy controller.");
+        input.execute(new PlaceOrderInputData(userID, symbol, quantity));
     }
 }
 
