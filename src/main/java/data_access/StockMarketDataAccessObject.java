@@ -16,11 +16,15 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.nio.charset.StandardCharsets;
+import java.time.Duration;
+import java.time.Instant;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.ConcurrentHashMap;
 
 public class StockMarketDataAccessObject
         implements ViewStockListDataAccessInterface,
@@ -32,8 +36,19 @@ public class StockMarketDataAccessObject
     private static final String TIME_SERIES_URL =
             "https://api.twelvedata.com/time_series";
 
+    private static final Duration CACHE_DURATION =
+            Duration.ofMinutes(5);
+
     private final HttpClient client;
     private final String apiKey;
+
+    private final Map<String, CachedPrices> historicalCache =
+            new ConcurrentHashMap<>();
+
+    private record CachedPrices(
+            List<HistoricalPrice> prices,
+            Instant expiresAt) {
+    }
 
     public StockMarketDataAccessObject() {
         this.client = HttpClient.newHttpClient();
@@ -75,10 +90,47 @@ public class StockMarketDataAccessObject
     public List<HistoricalPrice> getHistoricalPrices(
             String symbol, int outputSize) {
 
+        if (symbol == null || symbol.isBlank()) {
+            throw new IllegalArgumentException(
+                    "Stock symbol cannot be blank");
+        }
+
         if (outputSize <= 0) {
             throw new IllegalArgumentException(
                     "Output size must be positive");
         }
+
+        String cacheKey = symbol.trim().toUpperCase()
+                + ":" + outputSize;
+
+        // Compute ensures concurrent requests for the same stock
+        // do not trigger duplicate API calls.
+        CachedPrices cached = historicalCache.compute(
+                cacheKey,
+                (key, existing) -> {
+
+                    if (existing != null
+                            && Instant.now().isBefore(
+                            existing.expiresAt())) {
+                        return existing;
+                    }
+
+                    List<HistoricalPrice> prices =
+                            fetchHistoricalPrices(
+                                    symbol, outputSize);
+
+                    return new CachedPrices(
+                            List.copyOf(prices),
+                            Instant.now().plus(CACHE_DURATION)
+                    );
+                }
+        );
+
+        return cached.prices();
+    }
+
+    private List<HistoricalPrice> fetchHistoricalPrices(
+            String symbol, int outputSize) {
 
         String encodedSymbol = URLEncoder.encode(
                 symbol, StandardCharsets.UTF_8);
@@ -108,10 +160,11 @@ public class StockMarketDataAccessObject
             BigDecimal closingPrice =
                     item.get("close").getAsBigDecimal();
 
-            prices.add(new HistoricalPrice(date, closingPrice));
+            prices.add(new HistoricalPrice(
+                    date, closingPrice));
         }
 
-        // Charts should display oldest prices first.
+        // Display historical prices from oldest to newest.
         prices.sort(Comparator.comparing(
                 HistoricalPrice::getDate));
 
@@ -129,6 +182,12 @@ public class StockMarketDataAccessObject
             HttpResponse<String> response = client.send(
                     request,
                     HttpResponse.BodyHandlers.ofString());
+
+            if (response.statusCode() == 429) {
+                throw new IllegalStateException(
+                        "Twelve Data rate limit reached. "
+                                + "Please try again later.");
+            }
 
             if (response.statusCode() != 200) {
                 throw new IllegalStateException(
