@@ -5,6 +5,7 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import entity.HistoricalPrice;
 import entity.Stock;
+import io.github.cdimascio.dotenv.Dotenv;
 import use_case.ViewStockChartDataAccessInterface;
 import use_case.ViewStockListDataAccessInterface;
 
@@ -52,11 +53,19 @@ public class StockMarketDataAccessObject
 
     public StockMarketDataAccessObject() {
         this.client = HttpClient.newHttpClient();
-        this.apiKey = System.getenv("TWELVE_DATA_API_KEY");
+
+        // Load API key from .env or system environment variables.
+        Dotenv dotenv = Dotenv.configure()
+                .ignoreIfMissing()
+                .load();
+
+        this.apiKey = dotenv.get("TWELVE_DATA_API_KEY");
 
         if (apiKey == null || apiKey.isBlank()) {
             throw new IllegalStateException(
-                    "TWELVE_DATA_API_KEY is not configured");
+                    "TWELVE_DATA_API_KEY is not configured. "
+                            + "Add it to your .env file or "
+                            + "environment variables.");
         }
     }
 
@@ -103,8 +112,8 @@ public class StockMarketDataAccessObject
         String cacheKey = symbol.trim().toUpperCase()
                 + ":" + outputSize;
 
-        // Compute ensures concurrent requests for the same stock
-        // do not trigger duplicate API calls.
+        // Reuse cached prices while they remain valid.
+        // Concurrent requests for the same key share one fetch.
         CachedPrices cached = historicalCache.compute(
                 cacheKey,
                 (key, existing) -> {
@@ -164,7 +173,7 @@ public class StockMarketDataAccessObject
                     date, closingPrice));
         }
 
-        // Display historical prices from oldest to newest.
+        // Display prices in chronological order.
         prices.sort(Comparator.comparing(
                 HistoricalPrice::getDate));
 
@@ -218,6 +227,7 @@ public class StockMarketDataAccessObject
 
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
+
             throw new IllegalStateException(
                     "Stock request interrupted", e);
         }
