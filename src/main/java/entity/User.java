@@ -16,7 +16,6 @@ public class User {
         this.userName = userName;
         this.password = password;
         this.portfolio = new Portfolio();
-        // will update this once Portfolio class is implemented
         this.userId = userName + ( (Integer) suffixId).toString();
         suffixId += 1;
         // For now this will assign "unique" userId, more on this later
