@@ -4,32 +4,50 @@ import entity.Order;
 import use_case.order.OrderAccountGateway;
 import use_case.order.OrderAccountSnapshot;
 
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Objects;
 import java.util.Optional;
 
-/**
- * Account integration scaffold. The team's account DAO is not wired yet.
- *
- * <p>Integrate with UserDataAccessObject and the team's User/Portfolio APIs when
- * those modules are available. Do not create placeholder copies of their classes.
- * If a lookup returns a live mutable User, stage changes rather than mutating it
- * before a safe commit. Independent setters followed by save do not establish
- * an atomic transaction. All trade writers must coordinate at account level.
- */
+/** Translates the Order account port to an atomic store operation. */
 public final class OrderAccountAdapter implements OrderAccountGateway {
-    public OrderAccountAdapter() {
-        // TODO: Add constructor injection for the team's actual transaction-capable store.
+    private final OrderAccountStore store;
+
+    public OrderAccountAdapter(OrderAccountStore store) {
+        this.store = Objects.requireNonNull(store);
     }
 
     @Override
     public Optional<OrderAccountSnapshot> findAccount(String userID, String symbol) {
-        // TODO: Read cash and this symbol's quantity coherently through the team's account store.
-        throw new UnsupportedOperationException("TODO: integrate the account lookup.");
+        return store.find(userID).map(account -> new OrderAccountSnapshot(
+                account.cash(), account.holdings().getOrDefault(symbol, 0)));
     }
 
     @Override
-    public boolean commitTrade(Order order, OrderAccountSnapshot expected, OrderAccountSnapshot updated) {
-        // TODO: Compare expected state and atomically commit cash, target holding and order history.
-        throw new UnsupportedOperationException("TODO: integrate the atomic account commit.");
+    public boolean commitTrade(Order order, OrderAccountSnapshot expected,
+                               OrderAccountSnapshot updated) {
+        Objects.requireNonNull(order);
+        Objects.requireNonNull(expected);
+        Objects.requireNonNull(updated);
+        return store.update(order.getUserID(), current -> {
+            int held = current.holdings().getOrDefault(order.getSymbol(), 0);
+            if (current.cash().compareTo(expected.cash()) != 0 || held != expected.quantity()) {
+                return Optional.empty();
+            }
+            if (current.history().stream().anyMatch(
+                    previous -> previous.getOrderID().equals(order.getOrderID()))) {
+                throw new IllegalArgumentException("Order ID has already been recorded.");
+            }
+            var holdings = new HashMap<>(current.holdings());
+            if (updated.quantity() == 0) {
+                holdings.remove(order.getSymbol());
+            } else {
+                holdings.put(order.getSymbol(), updated.quantity());
+            }
+            var history = new ArrayList<>(current.history());
+            history.add(order);
+            return Optional.of(new OrderAccountData(updated.cash(), holdings, history));
+        });
     }
 }
 

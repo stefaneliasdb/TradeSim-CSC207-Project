@@ -1,6 +1,7 @@
 package interface_adapter.order.buy;
 
 import interface_adapter.order.OrderViewModel;
+import interface_adapter.order.OrderResultFormatter;
 import use_case.order.OrderOutputData;
 import use_case.order.buy.BuyOrderOutputBoundary;
 
@@ -16,9 +17,7 @@ public final class BuyOrderPresenter implements BuyOrderOutputBoundary {
 
     @Override
     public void present(OrderOutputData result) {
-        // TODO: Map status to a buy-specific message and format the total for display.
-        // TODO: Clear old confirmation values on rejection and update the shared view model.
-        throw new UnsupportedOperationException("TODO: implement the buy presenter.");
+        OrderResultFormatter.present(viewModel, result, "Buy");
     }
 }
 
