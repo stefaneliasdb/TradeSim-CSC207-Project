@@ -34,6 +34,10 @@ public class Portfolio {
     }
 
     public BigDecimal getTotalValue(Map<String, BigDecimal> prices) {
-        return null;
+        BigDecimal total = new BigDecimal(0);
+        for (String s : prices.keySet()) {
+            total = total.add(prices.get(s));
+        }
+        return total;
     }
 }
