@@ -16,7 +16,7 @@ public class User {
         this.userName = userName;
         this.password = password;
         this.portfolio = new Portfolio();
-        // will update this once Portfolio class is implemented
+        // Portfolio will always start empty for MVP
         this.userId = userName + ( (Integer) suffixId).toString();
         suffixId += 1;
         // For now this will assign "unique" userId, more on this later

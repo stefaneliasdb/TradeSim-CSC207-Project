@@ -10,7 +10,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class ViewNetworthInteractor {
+public class ViewNetworthInteractor implements ViewNetworthInputBoundary {
     // pretend is saved.
     private ViewNetworthOutputBoundary viewNetworthPresenter;
     private ViewNetworthDataAccessInterface viewNetworthDataAccessObject;
@@ -21,6 +21,7 @@ public class ViewNetworthInteractor {
         this.viewNetworthPresenter = viewNetworthPresenter;
     }
 
+    @Override
     public void execute(ViewNetworthInputData viewNetworthInputData) {
         // expecting this to be given to me in a map
         Map<LocalTime, BigDecimal> networthHistory = viewNetworthDataAccessObject.getHistory(

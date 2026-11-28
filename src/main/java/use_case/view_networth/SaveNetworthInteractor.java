@@ -9,7 +9,7 @@ import java.util.concurrent.Executors;
 import java.util.concurrent.ScheduledExecutorService;
 import java.util.concurrent.TimeUnit;
 
-public class SaveNetworthInteractor {
+public class SaveNetworthInteractor implements SaveNetworthInputBoundary{
     private SaveNetworthDataAccessInterface saveNetworthDataAccessObject;
     // timed save of networth, start timer after logged in?
 
@@ -31,6 +31,8 @@ public class SaveNetworthInteractor {
         Runnable saveTask = () -> {
             saveNetworthDataAccessObject.saveNetworth(
                     currentUser.getuserId(),
+                    currentUser.getUserName(),
+                    currentUser.getPassword(),
                     LocalTime.now(),
                     getPortfolioWorth(currentUser).add(currentUser.getUserCash())
             );
@@ -39,12 +41,22 @@ public class SaveNetworthInteractor {
         scheduler.scheduleAtFixedRate(saveTask, 0, period, TimeUnit.MINUTES);
     }
 
+    @Override
     public void execute(SaveNetworthInputData saveNetworthInputData) {
-        User currentUser = saveNetworthDataAccessObject.getUser(
-                saveNetworthInputData.getUserId()
-        );
-        // can change later to give user a choice of viewing different time interval data
-        // if on an actual server we can probably keep this always recording...
-        repeatTask(1, currentUser);
+
+        String userId = saveNetworthInputData.getUserId();
+        if (saveNetworthDataAccessObject.getUser(userId) != null) {
+            User currentUser = saveNetworthDataAccessObject.getUser(userId);
+            repeatTask(1, currentUser);
+        } else {
+            throw new RuntimeException("User does not exist. UserId:" + userId) {
+                @Override
+                public String getLocalizedMessage() {
+                    return "[Database Error] " + getMessage();
+                }
+            };
+        }
     }
 }
+// can change later to give user a choice of viewing different time interval data
+// if on an actual server we can probably keep this always recording...
