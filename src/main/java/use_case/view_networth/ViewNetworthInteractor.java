@@ -23,7 +23,6 @@ public class ViewNetworthInteractor implements ViewNetworthInputBoundary {
 
     @Override
     public void execute(ViewNetworthInputData viewNetworthInputData) {
-        // expecting this to be given to me in a map
         Map<LocalTime, BigDecimal> networthHistory = viewNetworthDataAccessObject.getHistory(
                 viewNetworthInputData.getUserId()
         );

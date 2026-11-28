@@ -58,6 +58,8 @@ public class SaveNetworthDataAccessObject implements SaveNetworthDataAccessInter
                     String userName = rs.getString("userName");
                     String password = rs.getString("password");
                     User user = new User(userName, password);
+                    // TODO make a runtime DAO for portfolio specifically and retreive the portfolio
+                    // TODO and use setPortfolio()
                     return user;
                 }
             }

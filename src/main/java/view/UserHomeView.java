@@ -61,6 +61,7 @@ public class UserHomeView extends JPanel implements UserHomeViewModelListener {
             public void actionPerformed(ActionEvent evt) {
                 viewNetworthController.execute("Fake UserId");
                 // get the actual one once Log-in is done
+                // TODO: do screen switch here to ViewNetworthView instead of this
             }
         });
 
@@ -73,5 +74,10 @@ public class UserHomeView extends JPanel implements UserHomeViewModelListener {
 
     public void setController(ViewNetworthController viewNetworthController) {
         this.viewNetworthController = viewNetworthController;
+    }
+
+    @Override
+    public void notifyStateChanged() {
+
     }
 }

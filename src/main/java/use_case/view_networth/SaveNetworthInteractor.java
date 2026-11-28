@@ -23,6 +23,7 @@ public class SaveNetworthInteractor implements SaveNetworthInputBoundary{
                 "D", new BigDecimal("0.3"),
                 "E", new BigDecimal("0.2")
         );
+        // TODO change this once I can calculate real total value of portfolio
         return user.getPortfolio().getTotalValue(stockToPrice);
     }
 
@@ -47,6 +48,8 @@ public class SaveNetworthInteractor implements SaveNetworthInputBoundary{
         String userId = saveNetworthInputData.getUserId();
         if (saveNetworthDataAccessObject.getUser(userId) != null) {
             User currentUser = saveNetworthDataAccessObject.getUser(userId);
+            // TODO saveNetworthDAO will retrieve user's username, password, networth from SQL storage
+            // TODO but Portfolio will be acquired in runtime storage
             repeatTask(1, currentUser);
         } else {
             throw new RuntimeException("User does not exist. UserId:" + userId) {

@@ -6,7 +6,7 @@ public class User {
     private final String userId;
     private BigDecimal userCash = DEFAULT;
     // need to implement constant such as DEFAULT
-    private final Portfolio portfolio;
+    private Portfolio portfolio;
     private String userName;
     private String password;
     private static int suffixId;
@@ -15,8 +15,6 @@ public class User {
     public User(String userName, String password) {
         this.userName = userName;
         this.password = password;
-        this.portfolio = new Portfolio();
-        // Portfolio will always start empty for MVP
         this.userId = userName + ( (Integer) suffixId).toString();
         suffixId += 1;
         // For now this will assign "unique" userId, more on this later
@@ -41,6 +39,8 @@ public class User {
     public BigDecimal getUserCash() {
         return userCash;
     }
+
+    public void setPortfolio(Portfolio portfolio) {this.portfolio = portfolio;}
 
     /**
      *

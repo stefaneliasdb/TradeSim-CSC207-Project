@@ -10,9 +10,9 @@ public class SaveNetworthController {
         this.saveNetworthInteractor = saveNetworthInputBoundary;
     }
 
-    // execute will be triggered by logging in (not done)
+    // TODO execute will be triggered by logging in (not done)
     public void execute(String userId) {
-        // userId is probably gonna be an attribute in viewmodel or viewstate somewhere
+        // TODO userId is gonna be an attribute in viewmodel after log-in is done
         saveNetworthInteractor.execute(
                 new SaveNetworthInputData(userId)
         );

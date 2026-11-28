@@ -3,11 +3,12 @@ package interface_adapter.ViewNetworth;
 import view.UserHomeView;
 
 import java.math.BigDecimal;
+import java.util.ArrayList;
 import java.util.List;
 
 public class UserHomeViewModel {
     private UserHomeViewState userHomeViewState = new UserHomeViewState();
-    private List<UserHomeViewModelListener> Listeners;
+    private List<UserHomeViewModelListener> Listeners = new ArrayList<>();
 
     public void setState(String userName, BigDecimal networth) {
 
